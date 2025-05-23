@@ -11,9 +11,9 @@ import math
 
 
 # Paths to model and encoder files
-model_path = r"D:\Documents\Desktop\Loan approval prediction model\loan_approval_logistic_model.pkl"
-scaler_path = r"D:\Documents\Desktop\Loan approval prediction model\scaler .pkl"
-encoder_path = r"D:\Documents\Desktop\Loan approval prediction model\label_encoders .pkl"
+model_path = r"loan_approval_logistic_model.pkl"
+scaler_path = r"scaler .pkl"
+encoder_path = r"label_encoders .pkl"
 
 
 # Load model, scaler, and encoders
