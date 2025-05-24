@@ -2,22 +2,40 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import datetime
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 import pickle
 import math
 
+# Set page configuration and background color
+st.set_page_config(page_title="Loan Approval App", layout="centered")
+st.markdown("""
+    <style>
+        body {
+            background-color: #001f3f;
+            color: white;
+        }
+        .stTextInput > div > div > input,
+        .stNumberInput > div > div > input,
+        .stSelectbox > div > div > div {
+            color: white !important;
+        }
+        .stButton > button {
+            background-color: white !important;
+            color: red !important;
+            font-weight: bold;
+        }
+        .stDataFrame div[data-testid="stHorizontalBlock"] {
+            background-color: #001f3f !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# Paths to model and encoder files
+# ✅ Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
 scaler_path = r"scaler .pkl"
 encoder_path = r"label_encoders .pkl"
 
-
 # Load model, scaler, and encoders
-
 try:
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
@@ -28,9 +46,15 @@ except Exception as e:
 
 st.title("🏦 Loan Approval Prediction App")
 
-# --- Input Fields ---
-age = st.number_input("Age", min_value=18, max_value=100)
-income = st.number_input("Income (EGP)", min_value=1000.0)
+# --- Input Fields with validation ---
+age = st.number_input("Personal Age (20 - 55)", min_value=18, max_value=100, step=1)
+if age < 20 or age > 55:
+    st.error("Please input age between 20 to 55 years")
+
+income = st.number_input("Personal Income (EGP)", min_value=0.0, step=100.0)
+if income < 5000:
+    st.error("Please enter amount more than or equal 5000 EGP")
+
 home_ownership = st.selectbox("Home Ownership", ['RENT', 'OWN', 'MORTGAGE', 'OTHER'])
 emp_length = st.number_input("Employment Length (Years)", min_value=0.0, step=0.5)
 loan_intent = st.selectbox("Loan Intent", ['EDUCATION', 'MEDICAL', 'PERSONAL', 'VENTURE', 'DEBTCONSOLIDATION', 'HOMEIMPROVEMENT'])
@@ -39,7 +63,6 @@ loan_amount = st.number_input("Loan Amount (EGP)", min_value=1000)
 interest_rate = st.number_input("Interest Rate (%)", min_value=0.1, format="%.2f")
 loan_period = st.selectbox("Loan Period (Months)", [36, 48, 60, 72, 84])
 
-# Monthly Payment Calculation
 def calculate_monthly_payment(amount, rate, term):
     monthly_rate = rate / 100 / 12
     if monthly_rate == 0:
@@ -58,6 +81,13 @@ credit_history = st.number_input("Credit History Length (Years)", min_value=0)
 
 # --- Prediction ---
 if st.button("Predict Loan Approval"):
+    if age < 20 or age > 55:
+        st.error("Age must be between 20 and 55 years")
+        st.stop()
+    if income < 5000:
+        st.error("Income must be more than or equal 5000 EGP")
+        st.stop()
+
     try:
         input_data = {
             'person_age': age,
@@ -78,7 +108,6 @@ if st.button("Predict Loan Approval"):
         categorical_cols = ['person_home_ownership', 'loan_intent', 'loan_grade', 'cb_person_default_on_file', 'employed_stably']
         numeric_cols = [col for col in input_data if col not in categorical_cols]
 
-        # Encode categorical columns
         for col in categorical_cols:
             if col in label_encoders:
                 encoder = label_encoders[col]
@@ -88,13 +117,8 @@ if st.button("Predict Loan Approval"):
                     st.error(f"Value '{input_data[col]}' not recognized for {col}. Valid: {list(encoder.classes_)}")
                     st.stop()
 
-        # Prepare DataFrame for scaling
         df_input = pd.DataFrame([input_data])
-
-        # Scale only numeric features
         df_input[numeric_cols] = scaler.transform(df_input[numeric_cols])
-
-        # Predict
         prediction = model.predict(df_input)[0]
 
         if prediction == 1:
@@ -112,11 +136,15 @@ if st.button("Predict Loan Approval"):
                 "Loan Period (Months)": [loan_period],
                 "Number of Checks": [num_checks],
                 "Check Amount (EGP)": [check_amount],
-                "Risk Ratio": [risk_ratio]
+                "Risk Ratio": [f"🔴 {risk_ratio}"]
             })
 
             st.subheader("✅ Loan Approved")
-            st.dataframe(result_df)
+            st.dataframe(result_df.style.set_properties(**{
+                'background-color': '#FFFF00',
+                'color': 'black',
+                'font-weight': 'bold'
+            }))
 
         else:
             suggestions = []
