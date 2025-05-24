@@ -67,8 +67,8 @@ denied_animation = load_lottieurl("https://assets1.lottiefiles.com/packages/lf20
 
 # Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
-scaler_path = r"scaler .pkl"
-encoder_path = r"label_encoders .pkl"
+scaler_path = r"scaler.pkl"
+encoder_path = r"label_encoders.pkl"
 
 # Load model, scaler, and encoders
 try:
