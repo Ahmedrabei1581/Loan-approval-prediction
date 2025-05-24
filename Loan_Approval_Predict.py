@@ -2,40 +2,55 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import os
-import pickle
-import math
+from io import BytesIO
+import base64
+import plotly.express as px
 
-# Set page configuration and background color
+# Set page config and inject custom CSS
 st.set_page_config(page_title="Loan Approval App", layout="centered")
+
 st.markdown("""
     <style>
-        body {
+        .main {
             background-color: #001f3f;
             color: white;
         }
-        .stTextInput > div > div > input,
-        .stNumberInput > div > div > input,
-        .stSelectbox > div > div > div {
+        html, body, [data-testid="stAppViewContainer"] {
+            background-color: #001f3f !important;
             color: white !important;
         }
-        .stButton > button {
+        input, select, textarea {
+            color: white !important;
+            background-color: #003366 !important;
+        }
+        .css-1wa3eu0-placeholder, .css-1okebmr-indicatorSeparator {
+            color: white !important;
+        }
+        button[kind="secondary"] {
             background-color: white !important;
             color: red !important;
             font-weight: bold;
         }
-        .stDataFrame div[data-testid="stHorizontalBlock"] {
-            background-color: #001f3f !important;
+        .stAlert {
+            background-color: #003366 !important;
+            color: white !important;
+        }
+        thead tr th {
+            background-color: #FFD700 !important;
+            color: black !important;
+        }
+        tbody tr td {
+            background-color: #fffdd0 !important;
+            color: black !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ Paths to model and encoder files
+# Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
 scaler_path = r"scaler .pkl"
 encoder_path = r"label_encoders .pkl"
 
-# Load model, scaler, and encoders
 try:
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
@@ -44,14 +59,14 @@ except Exception as e:
     st.error(f"Error loading model or preprocessing files: {e}")
     st.stop()
 
-st.title("🏦 Loan Approval Prediction App")
+st.title("\U0001F3E6 Loan Approval Prediction App")
 
-# --- Input Fields with validation ---
-age = st.number_input("Personal Age (20 - 55)", min_value=18, max_value=100, step=1)
+# Input Fields
+age = st.number_input("Personal Age", min_value=18, max_value=100)
 if age < 20 or age > 55:
     st.error("Please input age between 20 to 55 years")
 
-income = st.number_input("Personal Income (EGP)", min_value=0.0, step=100.0)
+income = st.number_input("Personal Income (EGP)", min_value=1000.0)
 if income < 5000:
     st.error("Please enter amount more than or equal 5000 EGP")
 
@@ -63,6 +78,7 @@ loan_amount = st.number_input("Loan Amount (EGP)", min_value=1000)
 interest_rate = st.number_input("Interest Rate (%)", min_value=0.1, format="%.2f")
 loan_period = st.selectbox("Loan Period (Months)", [36, 48, 60, 72, 84])
 
+# Monthly Payment Calculation
 def calculate_monthly_payment(amount, rate, term):
     monthly_rate = rate / 100 / 12
     if monthly_rate == 0:
@@ -75,20 +91,17 @@ st.success(f"Estimated Monthly Payment: {monthly_payment} EGP")
 loan_percent_income = round(loan_amount / income, 2) if income > 0 else 0.0
 st.info(f"Loan to Income Ratio: {loan_percent_income}")
 
-loan_history = st.selectbox("Defaulted Before? (cb_person_default_on_file)", ['N', 'Y'])
-employed_stably = st.selectbox("Employed Stably?", ['0', '1'])
+loan_history = st.selectbox("Defaulted Before?", ['N', 'Y'])
+employed_stably = st.selectbox("Employed Stably?", ['NO', 'YES'])
 credit_history = st.number_input("Credit History Length (Years)", min_value=0)
 
-# --- Prediction ---
+# Predict Button
 if st.button("Predict Loan Approval"):
-    if age < 20 or age > 55:
-        st.error("Age must be between 20 and 55 years")
-        st.stop()
-    if income < 5000:
-        st.error("Income must be more than or equal 5000 EGP")
-        st.stop()
-
     try:
+        if age < 20 or age > 55 or income < 5000:
+            st.warning("Fix input errors before prediction.")
+            st.stop()
+
         input_data = {
             'person_age': age,
             'person_income': income,
@@ -114,11 +127,12 @@ if st.button("Predict Loan Approval"):
                 if input_data[col] in encoder.classes_:
                     input_data[col] = encoder.transform([input_data[col]])[0]
                 else:
-                    st.error(f"Value '{input_data[col]}' not recognized for {col}. Valid: {list(encoder.classes_)}")
+                    st.error(f"Invalid input '{input_data[col]}' for {col}.")
                     st.stop()
 
         df_input = pd.DataFrame([input_data])
         df_input[numeric_cols] = scaler.transform(df_input[numeric_cols])
+
         prediction = model.predict(df_input)[0]
 
         if prediction == 1:
@@ -136,17 +150,29 @@ if st.button("Predict Loan Approval"):
                 "Loan Period (Months)": [loan_period],
                 "Number of Checks": [num_checks],
                 "Check Amount (EGP)": [check_amount],
-                "Risk Ratio": [f"🔴 {risk_ratio}"]
+                "Risk Ratio": [risk_ratio]
             })
 
-            st.subheader("✅ Loan Approved")
-            st.dataframe(result_df.style.set_properties(**{
-                'background-color': '#FFFF00',
-                'color': 'black',
-                'font-weight': 'bold'
-            }))
+            st.markdown("<h3 style='color:lime;'>\u2705 Loan Approved!</h3>", unsafe_allow_html=True)
+            styled_df = result_df.style.applymap(lambda x: 'color: red;' if isinstance(x, float) and x == risk_ratio else 'color: black;')
+            st.dataframe(styled_df, use_container_width=True)
+
+            # Export
+            export_option = st.radio("Export Results As:", ['None', 'Excel'])
+            if export_option == 'Excel':
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    result_df.to_excel(writer, index=False, sheet_name='Loan Result')
+                    writer.save()
+                st.download_button(
+                    label="Download Excel",
+                    data=output.getvalue(),
+                    file_name="loan_result.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
         else:
+            st.markdown("<h3 style='color:red;'>\u274C Loan Denied</h3>", unsafe_allow_html=True)
             suggestions = []
             if income < 5000:
                 suggestions.append("Increase your income")
@@ -154,10 +180,9 @@ if st.button("Predict Loan Approval"):
                 suggestions.append("Reduce the requested loan amount")
             if credit_history < 3:
                 suggestions.append("Improve your credit history")
-            if employed_stably == '0':
+            if employed_stably == 'NO':
                 suggestions.append("Maintain stable employment")
 
-            st.subheader("❌ Loan Denied")
             st.write("Suggestions to improve approval:")
             for s in suggestions:
                 st.markdown(f"- {s}")
