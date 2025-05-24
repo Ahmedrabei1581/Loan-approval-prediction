@@ -6,15 +6,17 @@ import datetime
 import os
 import base64
 import io
+from streamlit_lottie import st_lottie
+import requests
 
 # --- Page Config and Styling ---
 st.set_page_config(page_title="Loan Approval Prediction App", layout="centered")
 
 custom_css = """
 <style>
-body {
-    background-color: #001f3f;
-    color: white;
+html, body, [class*="css"]  {
+    background-color: #001f3f !important;
+    color: white !important;
 }
 
 section[data-testid="stSidebar"] {
@@ -23,6 +25,8 @@ section[data-testid="stSidebar"] {
 
 input, select, textarea {
     color: white !important;
+    background-color: #003366 !important;
+    border: 1px solid white !important;
 }
 
 [data-testid="stNumberInput"] label,
@@ -32,14 +36,15 @@ input, select, textarea {
 }
 
 .stButton>button {
-    background-color: white;
-    color: red;
+    background-color: white !important;
+    color: red !important;
     font-weight: bold;
 }
 
 thead th {
     background-color: #003366 !important;
     color: yellow !important;
+    font-weight: bold !important;
 }
 
 tbody td {
@@ -49,6 +54,16 @@ tbody td {
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
+
+# --- Lottie Loader ---
+def load_lottieurl(url: str):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+approved_animation = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_touohxv0.json")
+denied_animation = load_lottieurl("https://assets1.lottiefiles.com/packages/lf20_jbrw3hcz.json")
 
 # Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
@@ -140,6 +155,7 @@ if st.button("Predict Loan Approval"):
         prediction = model.predict(df_input)[0]
 
         if prediction == 1:
+            st_lottie(approved_animation, height=200, key="approved")
             credit_map = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6}
             credit_risk = credit_map.get(loan_grade, 6)
             risk_ratio = round((credit_risk + loan_amount / income + interest_rate / 100 + loan_percent_income + credit_history / 10) / 5, 2)
@@ -158,13 +174,11 @@ if st.button("Predict Loan Approval"):
             })
 
             st.markdown("## ✅ Loan Approved")
-            st.dataframe(result_df.style.set_properties(**{
-                'background-color': '#003366',
-                'color': 'yellow',
-                'font-weight': 'bold'
-            }))
+            st.dataframe(result_df.style.set_table_styles([
+                {'selector': 'thead th', 'props': [('background-color', '#003366'), ('color', 'yellow'), ('font-weight', 'bold')]},
+                {'selector': 'tbody td', 'props': [('color', 'yellow'), ('font-weight', 'bold')]}
+            ]))
 
-            # Export to Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 result_df.to_excel(writer, index=False, sheet_name='Loan Results')
@@ -172,6 +186,7 @@ if st.button("Predict Loan Approval"):
             st.download_button("📥 Download Results as Excel", data=output.getvalue(), file_name="loan_results.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         else:
+            st_lottie(denied_animation, height=200, key="denied")
             st.markdown("## ❌ Loan Denied")
             suggestions = []
             if income < 5000:
