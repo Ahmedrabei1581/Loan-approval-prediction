@@ -33,6 +33,7 @@ scipy==1.15.3
 six==1.17.0
 smmap==5.0.2
 streamlit==1.45.0
+streamlit-lottie==0.0.5
 streamlit-option-menu==0.4.0
 tenacity==9.1.2
 threadpoolctl==3.6.0
