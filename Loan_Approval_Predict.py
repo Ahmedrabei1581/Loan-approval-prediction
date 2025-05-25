@@ -13,34 +13,23 @@ st.set_page_config(page_title="Loan Approval Prediction App", layout="centered")
 # --- Custom CSS for background and styling ---
 custom_css = """
 <style>
-/* Background and main font color for entire page */
-html, body, [class*="css"] {
+html, body, [class*="css"]  {
     background-color: #001f3f !important;
     color: white !important;
 }
-
-/* Sidebar background & font color */
 section[data-testid="stSidebar"] {
     background-color: #001f3f !important;
-    color: white !important;
 }
-
-/* Inputs, selects, textareas styling */
 input, select, textarea {
     color: white !important;
     background-color: #003366 !important;
     border: 1px solid white !important;
 }
-
-/* Labels for number input, selectbox, dataframe */
 [data-testid="stNumberInput"] label,
 [data-testid="stSelectbox"] label,
-[data-testid="stDataFrame"],
-[data-testid="stMarkdownContainer"] {
+[data-testid="stDataFrame"] {
     color: white !important;
 }
-
-/* Button style */
 .stButton>button {
     background-color: white !important;
     color: #001f3f !important;
@@ -49,32 +38,14 @@ input, select, textarea {
     padding: 0.5rem 1rem;
     border-radius: 8px;
 }
-
-/* Table header */
 thead th {
-    background-color: #003366 !important;
-    color: yellow !important;
+    background-color: #001f3f !important;
+    color: white !important;
     font-weight: bold;
 }
-
-/* Table body */
 tbody td {
-    color: yellow !important;
-    font-weight: bold;
-}
-
-/* Scrollbar for sidebar (optional) */
-section[data-testid="stSidebar"]::-webkit-scrollbar {
-    width: 6px;
-}
-section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
-    background-color: #003366;
-    border-radius: 3px;
-}
-
-/* Lottie animation container background transparent */
-.lottie-container {
-    background: transparent !important;
+    background-color: #001f3f !important;
+    color: white !important;
 }
 </style>
 """
@@ -99,8 +70,8 @@ lottie_deny = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_jtb
 
 # Paths to model and preprocessing files
 model_path = "loan_approval_logistic_model.pkl"
-scaler_path = "scaler.pkl"
-encoder_path = "label_encoders.pkl"
+scaler_path = "scaler.pkl"           # fixed whitespace if any
+encoder_path = "label_encoders.pkl" # fixed whitespace if any
 
 # Load model, scaler, and encoders safely
 try:
@@ -217,8 +188,8 @@ if st.button("Predict Loan Approval"):
                 st_lottie(lottie_approve, height=150)
             st.markdown("## ✅ Loan Approved")
             st.dataframe(result_df.style.set_table_styles([
-                {'selector': 'thead th', 'props': [('background-color', '#003366'), ('color', 'yellow'), ('font-weight', 'bold')]},
-                {'selector': 'tbody td', 'props': [('color', 'yellow'), ('font-weight', 'bold')]},
+                {'selector': 'thead th', 'props': [('background-color', '#001f3f'), ('color', 'white'), ('font-weight', 'bold')]},
+                {'selector': 'tbody td', 'props': [('background-color', '#001f3f'), ('color', 'white')]},
             ]))
 
             # Export to Excel
