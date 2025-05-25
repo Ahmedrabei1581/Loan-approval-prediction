@@ -72,7 +72,7 @@ lottie_deny = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_jtb
 
 # Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
-scaler_path = r"scaler.pkl"
+scaler_path = r"scaler .pkl"
 encoder_path = r"label_encoders.pkl"
 
 # Load model, scaler, and encoders
