@@ -19,23 +19,19 @@ html, body, [class*="css"]  {
     background-color: #001f3f !important;
     color: white !important;
 }
-
 section[data-testid="stSidebar"] {
     background-color: #001f3f;
 }
-
 input, select, textarea {
     color: white !important;
     background-color: #003366 !important;
     border: 1px solid white !important;
 }
-
 [data-testid="stNumberInput"] label,
 [data-testid="stSelectbox"] label,
 [data-testid="stDataFrame"] {
     color: white !important;
 }
-
 .stButton>button {
     background-color: white !important;
     color: red !important;
@@ -44,13 +40,11 @@ input, select, textarea {
     padding: 0.5rem 1rem;
     border-radius: 8px;
 }
-
 thead th {
     background-color: #003366 !important;
     color: yellow !important;
     font-weight: bold;
 }
-
 tbody td {
     color: yellow !important;
     font-weight: bold;
@@ -59,13 +53,17 @@ tbody td {
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# --- Load Lottie Animation ---
+# --- Load Lottie Animation Safely ---
 def load_lottiefile(filepath: str):
-    with open(filepath, "r") as f:
-        return json.load(f)
+    try:
+        with open(filepath, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.warning(f"⚠️ Lottie file not found: {filepath}")
+        return None
 
-lottie_approve = load_lottiefile("approve.json")  # make sure this file exists
-lottie_deny = load_lottiefile("deny.json")        # make sure this file exists
+lottie_approve = load_lottiefile("approve.json")
+lottie_deny = load_lottiefile("deny.json")
 
 # Paths to model and encoder files
 model_path = r"loan_approval_logistic_model.pkl"
@@ -174,7 +172,8 @@ if st.button("Predict Loan Approval"):
                 "Risk Ratio": [f"🔴 {risk_ratio}"]
             })
 
-            st_lottie(lottie_approve, height=150)
+            if lottie_approve:
+                st_lottie(lottie_approve, height=150)
             st.markdown("## ✅ Loan Approved")
             st.dataframe(result_df.style.set_table_styles([
                 {'selector': 'thead th', 'props': [('background-color', '#003366'), ('color', 'yellow'), ('font-weight', 'bold')]},
@@ -189,7 +188,8 @@ if st.button("Predict Loan Approval"):
             st.download_button("📥 Download Results as Excel", data=output.getvalue(), file_name="loan_results.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         else:
-            st_lottie(lottie_deny, height=150)
+            if lottie_deny:
+                st_lottie(lottie_deny, height=150)
             st.markdown("## ❌ Loan Denied")
             suggestions = []
             if income < 5000:
