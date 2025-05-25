@@ -96,10 +96,11 @@ st.title("🏦 Loan Approval Prediction App")
 
 # --- Input Fields ---
 age = st.number_input("Age", min_value=18, max_value=100)
-income = st.number_input("
+income = st.number_input("Income (EGP)", min_value=1000.0)
+
 if age < 20 or age > 55:
-    st.error("Please inputIncome (EGP)", min_value=1000.0)
- age between 20 to 55 years")
+    st.error("Please input age between 20 to 55 years")
+
 if income < 5000:
     st.error("Please enter amount more than or equal 5000 EGP")
 
@@ -196,6 +197,7 @@ if st.button("Predict Loan Approval"):
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 result_df.to_excel(writer, index=False, sheet_name='Loan Results')
+                writer.close()
             st.download_button("📥 Download Results as Excel", data=output.getvalue(), file_name="loan_results.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         else:
