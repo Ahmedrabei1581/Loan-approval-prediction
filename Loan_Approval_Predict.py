@@ -13,39 +13,68 @@ st.set_page_config(page_title="Loan Approval Prediction App", layout="centered")
 # --- Custom CSS for background and styling ---
 custom_css = """
 <style>
-html, body, [class*="css"]  {
+/* Background and main font color for entire page */
+html, body, [class*="css"] {
     background-color: #001f3f !important;
     color: white !important;
 }
+
+/* Sidebar background & font color */
 section[data-testid="stSidebar"] {
-    background-color: #001f3f;
+    background-color: #001f3f !important;
+    color: white !important;
 }
+
+/* Inputs, selects, textareas styling */
 input, select, textarea {
     color: white !important;
     background-color: #003366 !important;
     border: 1px solid white !important;
 }
+
+/* Labels for number input, selectbox, dataframe */
 [data-testid="stNumberInput"] label,
 [data-testid="stSelectbox"] label,
-[data-testid="stDataFrame"] {
+[data-testid="stDataFrame"],
+[data-testid="stMarkdownContainer"] {
     color: white !important;
 }
+
+/* Button style */
 .stButton>button {
     background-color: white !important;
-    color: red !important;
+    color: #001f3f !important;
     font-weight: bold;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 8px;
 }
+
+/* Table header */
 thead th {
     background-color: #003366 !important;
     color: yellow !important;
     font-weight: bold;
 }
+
+/* Table body */
 tbody td {
     color: yellow !important;
     font-weight: bold;
+}
+
+/* Scrollbar for sidebar (optional) */
+section[data-testid="stSidebar"]::-webkit-scrollbar {
+    width: 6px;
+}
+section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
+    background-color: #003366;
+    border-radius: 3px;
+}
+
+/* Lottie animation container background transparent */
+.lottie-container {
+    background: transparent !important;
 }
 </style>
 """
@@ -70,8 +99,8 @@ lottie_deny = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_jtb
 
 # Paths to model and preprocessing files
 model_path = "loan_approval_logistic_model.pkl"
-scaler_path = "scaler .pkl"
-encoder_path = "label_encoders .pkl"
+scaler_path = "scaler.pkl"
+encoder_path = "label_encoders.pkl"
 
 # Load model, scaler, and encoders safely
 try:
