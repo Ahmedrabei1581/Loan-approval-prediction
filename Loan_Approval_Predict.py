@@ -26,9 +26,10 @@ input, select, textarea {
     border: 1px solid white !important;
 }
 [data-testid="stNumberInput"] label,
-[data-testid="stSelectbox"] label,
-[data-testid="stDataFrame"] {
-    color: white !important;
+[data-testid="stSelectbox"] label {
+    color: #00BFFF !important;  /* Dark blue labels */
+    font-weight: bold;
+    font-size: 1rem;
 }
 .stButton>button {
     background-color: white !important;
