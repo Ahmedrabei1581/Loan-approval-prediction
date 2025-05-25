@@ -45,3 +45,4 @@ urllib3==2.4.0
 watchdog==6.0.0
 seaborn==0.13.2
 requests==2.32.3
+XlsxWriter-3.2.3
