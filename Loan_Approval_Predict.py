@@ -10,7 +10,7 @@ import requests
 # --- Page Config and Styling ---
 st.set_page_config(page_title="Loan Approval Prediction App", layout="centered")
 
-# --- Custom CSS ---
+# --- Custom CSS for background and styling ---
 custom_css = """
 <style>
 html, body, [class*="css"]  {
@@ -40,17 +40,12 @@ input, select, textarea {
 }
 thead th {
     background-color: #001f3f !important;
-    color: white !important;
+    color: #00BFFF !important;
     font-weight: bold;
 }
 tbody td {
     background-color: #001f3f !important;
     color: white !important;
-}
-.blue-black-label {
-    color: #b0c4de !important;
-    font-weight: bold;
-    font-size: 18px;
 }
 </style>
 """
@@ -69,66 +64,52 @@ def load_lottieurl(url: str):
         st.warning(f"⚠️ Error loading Lottie animation: {e}")
         return None
 
-# Lottie animations
+# URLs for Lottie animations (approved and denied)
 lottie_approve = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_yr6zz3wv.json")
 lottie_deny = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_jtbfg2nb.json")
-lottie_banking = load_lottieurl("https://assets1.lottiefiles.com/packages/lf20_jcikwtux.json")  # Banking animation
 
-# --- Display banking animation ---
-if lottie_banking:
-    st_lottie(lottie_banking, height=200)
-
-# --- Load model and preprocessing files ---
+# Paths to model and preprocessing files
 model_path = "loan_approval_logistic_model.pkl"
 scaler_path = "scaler.pkl"
-encoder_path = "label_encoders .pkl"
+encoder_path = "label_encoders.pkl"
 
+# Load model, scaler, and encoders safely
 try:
     model = joblib.load(model_path)
+except Exception as e:
+    st.error(f"Error loading model file '{model_path}': {e}")
+    st.stop()
+
+try:
     scaler = joblib.load(scaler_path)
+except Exception as e:
+    st.error(f"Error loading scaler file '{scaler_path}': {e}")
+    st.stop()
+
+try:
     label_encoders = joblib.load(encoder_path)
 except Exception as e:
-    st.error(f"Error loading model or preprocessing files: {e}")
+    st.error(f"Error loading label encoders file '{encoder_path}': {e}")
     st.stop()
 
 st.title("🏦 Loan Approval Prediction App")
 
-# --- Helper to render styled labels ---
-def styled_label(text):
-    return f"<span class='blue-black-label'>{text}</span>"
-
 # --- Input Fields ---
-st.markdown(styled_label("Age"), unsafe_allow_html=True)
-age = st.number_input(" ", min_value=18, max_value=100)
-
-st.markdown(styled_label("Income (EGP)"), unsafe_allow_html=True)
-income = st.number_input("  ", min_value=1000.0)
-
+age = st.number_input("Age", min_value=18, max_value=100)
+income = st.number_input("
 if age < 20 or age > 55:
-    st.error("Please input age between 20 to 55 years")
+    st.error("Please inputIncome (EGP)", min_value=1000.0)
+ age between 20 to 55 years")
 if income < 5000:
     st.error("Please enter amount more than or equal 5000 EGP")
 
-st.markdown(styled_label("Home Ownership"), unsafe_allow_html=True)
-home_ownership = st.selectbox("   ", ['RENT', 'OWN', 'MORTGAGE', 'OTHER'])
-
-st.markdown(styled_label("Employment Length (Years)"), unsafe_allow_html=True)
-emp_length = st.number_input("    ", min_value=0.0, step=0.5)
-
-st.markdown(styled_label("Loan Intent"), unsafe_allow_html=True)
-loan_intent = st.selectbox("     ", ['EDUCATION', 'MEDICAL', 'PERSONAL', 'VENTURE', 'DEBTCONSOLIDATION', 'HOMEIMPROVEMENT'])
-
-st.markdown(styled_label("Loan Grade"), unsafe_allow_html=True)
-loan_grade = st.selectbox("      ", ['A', 'B', 'C', 'D', 'E', 'F', 'G'])
-
-st.markdown(styled_label("Loan Amount (EGP)"), unsafe_allow_html=True)
-loan_amount = st.number_input("       ", min_value=1000)
-
-st.markdown(styled_label("Interest Rate (%)"), unsafe_allow_html=True)
-interest_rate = st.number_input("        ", min_value=0.1, format="%.2f")
-
-st.markdown(styled_label("Loan Period (Months)"), unsafe_allow_html=True)
-loan_period = st.selectbox("         ", [36, 48, 60, 72, 84])
+home_ownership = st.selectbox("Home Ownership", ['RENT', 'OWN', 'MORTGAGE', 'OTHER'])
+emp_length = st.number_input("Employment Length (Years)", min_value=0.0, step=0.5)
+loan_intent = st.selectbox("Loan Intent", ['EDUCATION', 'MEDICAL', 'PERSONAL', 'VENTURE', 'DEBTCONSOLIDATION', 'HOMEIMPROVEMENT'])
+loan_grade = st.selectbox("Loan Grade", ['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+loan_amount = st.number_input("Loan Amount (EGP)", min_value=1000)
+interest_rate = st.number_input("Interest Rate (%)", min_value=0.1, format="%.2f")
+loan_period = st.selectbox("Loan Period (Months)", [36, 48, 60, 72, 84])
 
 def calculate_monthly_payment(amount, rate, term):
     monthly_rate = rate / 100 / 12
@@ -142,16 +123,11 @@ st.success(f"Estimated Monthly Payment: {monthly_payment} EGP")
 loan_percent_income = round(loan_amount / income, 2) if income > 0 else 0.0
 st.info(f"Loan to Income Ratio: {loan_percent_income}")
 
-st.markdown(styled_label("Defaulted Before? (cb_person_default_on_file)"), unsafe_allow_html=True)
-loan_history = st.selectbox("          ", ['N', 'Y'])
+loan_history = st.selectbox("Defaulted Before? (cb_person_default_on_file)", ['N', 'Y'])
+employed_stably = st.selectbox("Employed Stably?", ['0', '1'])
+credit_history = st.number_input("Credit History Length (Years)", min_value=0)
 
-st.markdown(styled_label("Employed Stably?"), unsafe_allow_html=True)
-employed_stably = st.selectbox("           ", ['0', '1'])
-
-st.markdown(styled_label("Credit History Length (Years)"), unsafe_allow_html=True)
-credit_history = st.number_input("            ", min_value=0)
-
-# --- Prediction Logic ---
+# --- Prediction ---
 if st.button("Predict Loan Approval"):
     if age < 20 or age > 55 or income < 5000:
         st.stop()
@@ -182,7 +158,7 @@ if st.button("Predict Loan Approval"):
                 if input_data[col] in encoder.classes_:
                     input_data[col] = encoder.transform([input_data[col]])[0]
                 else:
-                    st.error(f"Value '{input_data[col]}' not recognized for {col}.")
+                    st.error(f"Value '{input_data[col]}' not recognized for {col}. Valid: {list(encoder.classes_)}")
                     st.stop()
 
         df_input = pd.DataFrame([input_data])
@@ -211,12 +187,15 @@ if st.button("Predict Loan Approval"):
             if lottie_approve:
                 st_lottie(lottie_approve, height=150)
             st.markdown("## ✅ Loan Approved")
-            st.dataframe(result_df)
+            st.dataframe(result_df.style.set_table_styles([
+                {'selector': 'thead th', 'props': [('background-color', '#001f3f'), ('color', '#00BFFF'), ('font-weight', 'bold')]},
+                {'selector': 'tbody td', 'props': [('background-color', '#001f3f'), ('color', 'white')]},
+            ]))
 
+            # Export to Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 result_df.to_excel(writer, index=False, sheet_name='Loan Results')
-                writer.save()
             st.download_button("📥 Download Results as Excel", data=output.getvalue(), file_name="loan_results.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         else:
@@ -232,6 +211,7 @@ if st.button("Predict Loan Approval"):
                 suggestions.append("Improve your credit history")
             if employed_stably == '0':
                 suggestions.append("Maintain stable employment")
+
             st.write("Suggestions to improve approval:")
             for s in suggestions:
                 st.markdown(f"- {s}")
