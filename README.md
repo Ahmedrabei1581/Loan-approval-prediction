@@ -15,6 +15,7 @@ bash
 Copy
 Edit
 📁 Loan_Approval_Predict/
+
 ├── Loan_Approval_Predict.ipynb       # Main Jupyter Notebook
 ├── loan_approval_logistic_model.pkl  # Trained ML model (logistic regression)
 ├── label_encoders.pkl                # Encoded categorical feature mappings
