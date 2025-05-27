@@ -114,7 +114,7 @@ streamlit run streamlit_app.py
 ```
 
 ---
-
+https://loan-approval-prediction-abp4c5jgzbjrfclas7fhcv.streamlit.app/
 ### 6. 📤 Outputs
 
 #### For Approved Loans:
